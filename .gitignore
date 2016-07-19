@@ -4,3 +4,6 @@
 # Ignore Vim swap files
 *.swp
 
+# Ignore data files
+*.csv
+

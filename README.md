@@ -15,3 +15,17 @@ See [001_gc.rb].
 
 See [002_memory.rb]
 
+GC::Profiler has memory and CPU overhead (See [wrapper.rb] for custom wrapper example).
+
+Save memory by avoiding copiyng objects, modify them in place if it is possible (use ! methods).
+
+See [004_string_bang.rb]
+
+If your String is less than 40 bytes - user '<<', not '+=' method to concatenate it and Ruby will not allocate additional object.
+
+See [004_array_bang.rb] (w/ GC)
+
+Read files line by line. And keep in mind not only total memory consumption but also peaks.
+
+See [005_files.rb] (w/ and w/o GC)
+
