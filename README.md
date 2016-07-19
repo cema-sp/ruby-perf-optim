@@ -28,3 +28,9 @@ See [001_gc.rb](001_gc.rb)
 
   See [005_files.rb](005_files.rb) (w/ and w/o GC)
 
+6. Callbacks cause object to stay in memory. If you store callbacks, do not forget to remove them after they called.
+  See [006_callbacks_1.rb](006_callbacks_1.rb)
+  See [006_callbacks_2.rb](006_callbacks_2.rb)
+  See [006_callbacks_3.rb](006_callbacks_3.rb)
+  Try to avoid `&block` and use `yield` instead.
+
