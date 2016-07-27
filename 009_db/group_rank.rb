@@ -39,8 +39,8 @@ sql = <<SQL
 SQL
 
 time = Benchmark.realtime do
-  salaries = Empsalary.find_by_sql(sql).each { |s| s.rank = s[:rank] }
-  # puts salaries.first(3).map{ |s| s.as_json }
+  salaries = Empsalary.find_by_sql(sql)
+  # puts salaries.first(3).map{ |s| s.attribute }
 end
 
 puts 'Group rank with ActiveRecord: %5.3fs' % time
