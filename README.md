@@ -83,3 +83,8 @@ See [001_gc.rb](001_gc.rb)
 
 9. `Object#class`, `Object#is_a?`, `Object#kind_of?` are slow when used inside iterators
 
+10. Use SQL for aggregation & calculation if it is possible
+  See [009_db](009_db) (database query itself is only 30ms)
+
+11. Use native (compiled C) gems if possible
+
