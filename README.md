@@ -88,3 +88,51 @@ See [001_gc.rb](001_gc.rb)
 
 11. Use native (compiled C) gems if possible
 
+## Optimize Rails
+
+1. ActiveRecord uses 3x DB data size memory and calls often calls GC
+
+2. Use `#pluck`, `#select` to load only necessary data
+
+3. Preload associations if you plan to use them
+
+4. Use `#find_by_sql` to aggregate associations data
+
+5. Use `#find_each` & `#find_in_batches`
+
+6. Use `ActiveRecord::Base.connection.execute`, `ActiveRecord::Base.connection.exec_query`, `ActiveRecord::Base.connection.select_values`, `#update_all` to perform simple operations
+
+7. Use `render partial: 'a', collection: @col`, which loads partial template only once
+
+8. Paginate large views
+
+9. You may disable logging to increase performance
+
+10. Watch your helpers, they may be iterators-unsafe
+
+## Profiling
+
+_Profiling = measuring CPU/Memory usage + interpreting results_
+
+__For CPU profiling disable GC!__
+
+### ruby-prof
+
+__ruby-prof__ gem has both API (for isolated profiling) and CLI (for startup profiling). It also has Rack Middleware for Rails.
+
+See [010_rp_1.rb](010_rp_1.rb)
+
+Some programs may spend more time on startup than on actual code execution.
+Sometimes `GC.disable` may take significant amount of time because of _lazy GC sweep_.
+
+Use `Rack::RubyProf` middleware to profile Rails apps. Include it before `Rack::Runtime` to include other middlewares in report.
+To disable GC, use custom middleware [010_rp_rails/config/application.rb](010_rp_rails/config/application.rb).
+
+Rails profiling best practices:
+
+1. Disable GC
+2. Always profile in _production_ mode
+3. Profile twice and discard cold-start results
+4. Profile w/ & w/o caching if you use it
+
+

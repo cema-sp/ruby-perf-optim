@@ -1,0 +1,24 @@
+Started GET "/" for ::1 at 2016-07-28 18:20:08 +0300
+Processing by Rails::WelcomeController#index as HTML
+  Parameters: {"internal"=>true}
+  Rendering /usr/local/opt/rbenv/versions/2.3.0/lib/ruby/gems/2.3.0/gems/railties-5.0.0/lib/rails/templates/rails/welcome/index.html.erb
+  Rendered /usr/local/opt/rbenv/versions/2.3.0/lib/ruby/gems/2.3.0/gems/railties-5.0.0/lib/rails/templates/rails/welcome/index.html.erb (4.7ms)
+Completed 200 OK in 16ms (Views: 12.8ms)
+
+
+Started GET "/" for ::1 at 2016-07-28 18:23:56 +0300
+Processing by Rails::WelcomeController#index as HTML
+  Parameters: {"internal"=>true}
+  Rendering /usr/local/opt/rbenv/versions/2.3.0/lib/ruby/gems/2.3.0/gems/railties-5.0.0/lib/rails/templates/rails/welcome/index.html.erb
+  Rendered /usr/local/opt/rbenv/versions/2.3.0/lib/ruby/gems/2.3.0/gems/railties-5.0.0/lib/rails/templates/rails/welcome/index.html.erb (4.8ms)
+Completed 200 OK in 16ms (Views: 12.4ms)
+
+
+Started GET "/" for ::1 at 2016-07-29 14:26:02 +0300
+Processing by Rails::WelcomeController#index as HTML
+  Parameters: {"internal"=>true}
+  Rendering /usr/local/opt/rbenv/versions/2.3.0/lib/ruby/gems/2.3.0/gems/railties-5.0.0/lib/rails/templates/rails/welcome/index.html.erb
+  Rendered /usr/local/opt/rbenv/versions/2.3.0/lib/ruby/gems/2.3.0/gems/railties-5.0.0/lib/rails/templates/rails/welcome/index.html.erb (4.5ms)
+Completed 200 OK in 16ms (Views: 12.6ms)
+
+

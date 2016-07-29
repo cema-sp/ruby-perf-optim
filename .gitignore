@@ -7,3 +7,6 @@
 # Ignore data files
 *.csv
 
+# Ignore profiler output
+*.prof
+
