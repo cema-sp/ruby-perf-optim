@@ -135,4 +135,9 @@ Rails profiling best practices:
 3. Profile twice and discard cold-start results
 4. Profile w/ & w/o caching if you use it
 
+The most useful report tyles for ruby-prof (see [011_rp_rep.rb](011_rp_rep.rb)):
+
+1. __Flat__ (Shows which functions are slow)
+2. __Call graph__ (Shows callers and callees)
+3. __Stack report__ (Shows execution paths; good for small chunks of code)
 
