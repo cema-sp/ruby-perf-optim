@@ -10,4 +10,5 @@
 # Ignore profiler output
 *.prof
 *.prof.html
+*.callgrind.out.*
 

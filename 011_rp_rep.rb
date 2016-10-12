@@ -58,3 +58,6 @@ printer.print(File.open('011_rp_rep_graph.prof.html', 'w+'), min_percent: 3)
 printer = RubyProf::CallStackPrinter.new(result)
 printer.print(File.open('011_rp_rep_stack.prof.html', 'w+'))
 
+printer = RubyProf::CallTreePrinter.new(result)
+printer.print(print_file: true, path: './011_rp_rep_callgrind')
+
