@@ -12,3 +12,6 @@
 *.prof.html
 *.callgrind.out.*
 
+# Do not ignore .gitkeep files
+!.gitkeep
+

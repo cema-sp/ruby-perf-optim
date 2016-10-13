@@ -143,8 +143,21 @@ The most useful report types for ruby-prof (see [011_rp_rep.rb](011_rp_rep.rb)):
 
 #### Callgrind format
 
-Ruby-prof can generate callgrind files with CallTreePrinter.  
+Ruby-prof can generate callgrind files with CallTreePrinter (see [011_rp_rep.rb](011_rp_rep.rb)).  
 Callgrind profiles have double counting ~~issue~~!.  
 Callgrind profiles show loops as recursion.  
 It is better to start from the bottom of Call Graph and optimize its leaves first.
+
+## Optimizing with Profiler
+
+Always start optimizing with writing tests & benchmarks.  
+**!** Profiler adds up to **10x** time to function calls.  
+If you optimized individual functions but the whole thing is still slow, look at the code at a higher abstraction level.
+
+Optimization tips:
+
+1. Optimization with the profiler is a craft (not engineering)
+2. Always write test
+3. Never forget about the big picture
+4. Profiler obscures measurements, benchmarks needed
 
