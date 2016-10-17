@@ -11,6 +11,8 @@
 *.prof
 *.prof.html
 *.callgrind.out.*
+*.dump
+*.flamegraph.js
 
 # Do not ignore .gitkeep files
 !.gitkeep

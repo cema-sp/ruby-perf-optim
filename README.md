@@ -161,3 +161,18 @@ Optimization tips:
 3. Never forget about the big picture
 4. Profiler obscures measurements, benchmarks needed
 
+## Profile Memory
+
+80% of ruby performance optimization come from memory optimization.
+
+You have 2 options for memory profiling:
+
+1. Patched ruby interpreter
+2. Printing `GC#start` & `GC::Profiler` measurements
+
+To detect if memory profiling needed you should use *monitoring* and *profiling* tools.  
+Good tool for profiling is **Valgrind Massif** but it shows memory allocations only for C/C++ code.
+
+Another tool is **Stackprof** that shows shows number of object allocations (that is proportional to memory consumption) (see [014_stackprof.rb](014_stackprof.rb)). But if your code allocates small number of large objects, it won't help.  
+Stackprof could generate flamegraphs and it's OK to use it in production, because it has no overhead.
+
