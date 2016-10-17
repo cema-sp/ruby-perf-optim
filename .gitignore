@@ -11,6 +11,7 @@
 *.prof
 *.prof.html
 *.callgrind.out.*
+callgrind.out.*
 *.dump
 *.flamegraph.js
 

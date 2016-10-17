@@ -165,14 +165,30 @@ Optimization tips:
 
 80% of ruby performance optimization come from memory optimization.
 
-You have 2 options for memory profiling:
+You have 3 options for memory profiling:
 
-1. Patched ruby interpreter
-2. Printing `GC#start` & `GC::Profiler` measurements
+1. Massif / Stackprof profiles
+2. Patched Ruby interpreter & ruby-prof
+3. Printing `GC#start` & `GC::Profiler` measurements
 
 To detect if memory profiling needed you should use *monitoring* and *profiling* tools.  
 Good tool for profiling is **Valgrind Massif** but it shows memory allocations only for C/C++ code.
 
 Another tool is **Stackprof** that shows shows number of object allocations (that is proportional to memory consumption) (see [014_stackprof.rb](014_stackprof.rb)). But if your code allocates small number of large objects, it won't help.  
 Stackprof could generate flamegraphs and it's OK to use it in production, because it has no overhead.
+
+### Patched Ruby & RubyProf
+
+You need RailsExpress patched Ruby (google it). Then set RubyProf *measure mode* and use one of printers (see [015_rp_memory.rb](015_rp_memory.rb)). Don't forget to enable memory stats with `GC.enable_stats`.
+
+Modes for memory profiling:
+
+* MEMORY - mem usage
+* ALLOCATIONS - # of object allocations
+* GC_RUNS - # of GC runs (useless for optimization)
+* GC_TIME - GC time (useless for optimization)
+
+Memory profile shows only new memory allocations (not total number at time) and doesn't show GC reclaims.
+
+**!** Ruby allocates temp object for string > 23 chars.
 
