@@ -1,4 +1,4 @@
-# Ruby Performance Optimization Book Examples
+# Ruby Performance Optimization Book Abstract
 
 ## Try to disable GC and define memory consumption
 
@@ -169,7 +169,9 @@ You have 3 options for memory profiling:
 
 1. Massif / Stackprof profiles
 2. Patched Ruby interpreter & ruby-prof
-3. Printing `GC#start` & `GC::Profiler` measurements
+3. Printing `GC#stat` & `GC::Profiler` measurements
+
+### Specific tools
 
 To detect if memory profiling needed you should use *monitoring* and *profiling* tools.  
 Good tool for profiling is **Valgrind Massif** but it shows memory allocations only for C/C++ code.
@@ -191,4 +193,47 @@ Modes for memory profiling:
 Memory profile shows only new memory allocations (not total number at time) and doesn't show GC reclaims.
 
 **!** Ruby allocates temp object for string > 23 chars.
+
+### Manual way
+
+We can measure current memory usage, but it is not very useful.
+
+On Linux we can use OS tools:
+
+~~~ruby
+memory_before = `ps -o rss= -p #{Process.pid}`.to_i / 1024
+do_something
+memory_after = `ps -o rss= -p #{Process.pid}`.to_i / 1024
+~~~
+
+`GC#stat` and `GC::Profiler` can reveal some information.
+
+## Measure
+
+For adequate measurements we should measure a number of times and take median value.  
+A lot of external (CPU, OS, latency, etc.) and internal (GC runs, etc.) factors affect measured numbers. It is impossible to entirely exclude them.
+
+### Minimize external factors
+
+* Disable dynamic CPU frequency (governor, cpupower in Linux)
+* Warm up machine
+
+### Minimize internal factors
+
+Two things can affect application: GC and System calls (including I/O calls).
+
+You may disable GC for measurements or force it before benchmark with `GC.start` (but not in a loop **!** because of new object being created in it).  
+On Linux & Mac OS process fork available to fix that issue:
+
+~~~ruby
+100.times do
+  GC.start
+  pid = fork do
+    GC.start
+    m = Benchmark.realtime { ... }
+  end
+
+  Process.waitpid(pid)
+end
+~~~
 
