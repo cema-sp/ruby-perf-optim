@@ -280,6 +280,6 @@ Tips:
 * But don't forget to turn on caching and set log level to `:info`
 * Database size may affect your results, so rollback transactions or clear data
 * Write performance test for complex DB queries
-* Test DB queries count and try to reduce it
+* Test DB queries count and try to reduce it (may use *assert_value* gem) (see [017_query_count.rb](017_query_count.rb))
 * Generate enough data for performance test
 
