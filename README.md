@@ -237,3 +237,49 @@ On Linux & Mac OS process fork available to fix that issue:
 end
 ~~~
 
+### Analyze with Statistics
+
+*Confidence interval* - interval within which we can confidently state the true optimization lies.  
+*Level of confidence* - the size of confidence interval.
+
+Analysis algorithm:
+
+1. Estimate means:
+
+  `mx = sum(xs) / count(xs); my = sum(ys) / count(ys)`
+
+2. Calculate standard deviation:
+
+  `sdx = sqrt(sum(sqr(xi - mx)) / count(xs) - 1); sdy = sqrt(sum(sqr(yi - my)) / count(ys) - 1)` 
+
+3. Calculate optimization mean:
+
+  `mo = mx - my`
+
+4. Calculate standard error:
+
+  `err = sqrt(sqr(sdx) / count(xs) + sqr(sdy) / count(ys))`
+
+5. Get the confidence interval:
+
+  `interval = (mo - 2 * err)..(mo + 2 * err)`
+
+Both lower and upper bounds of confidence interval should be > 0 (see [016_statistics.rb](016_statistics.rb)). Always make more than **30** measurements for good results.
+
+For Ruby, round measures to tenth of milliseconds (e.g. 1.23 s). For rounding use tie-breaking "round half to even" rule (round 5 to even number: 1.25 ~= 1.2, 1.35 ~= 1.4).
+
+For better results you may exclude outliers and first (cold) measure results.
+
+### Test Rails performance
+
+For Rails performance testing use special gems (e.g. *rails-perftest*) or write your own custom assertions.
+
+Tips:
+
+* It is a good practice to create Rails performance *integration* tests
+* But don't forget to turn on caching and set log level to `:info`
+* Database size may affect your results, so rollback transactions or clear data
+* Write performance test for complex DB queries
+* Test DB queries count and try to reduce it
+* Generate enough data for performance test
+
