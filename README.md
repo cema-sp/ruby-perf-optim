@@ -435,3 +435,25 @@ Some GC stats (`GC.stat`) for Ruby 2.2:
 
 Growth is the same as in Ruby 2.1 but relative to *eden* pages, not allocated pages.
 
+### Object Memory
+
+If Ruby object is bigger than half of 40 bytes (on 64-bit OS) it will be stored **entirely** outside the *objects heap*. This *object memory* will be freed and returned to OS after GC (see [019_obj_memory.rb](019_obj_memory.rb)).
+
+Ruby string (`RSTRING` struct) can store only 23 bytes of payload.  
+`ObjectSpace.memsize_of(obj)` - shown object size in memory in bytes.
+
+For example, 24 chars String will have size of 65 bytes (24 outside the heap + 1 for upkeep + 40 bytes inside heap).
+
+It may be OK to allocate a big object in memory because it doesn't affect GC performance (but may lead to GC run), but it is crucial to allocate a large amount of small objects in *objects heap*.
+
+## What triggers GC
+
+Two main purposes are:
+
+* No more free slots in the *objects heap* space
+* Current memory allocation limit (malloc) has been exceeded
+
+### Heap Usage
+
+If there are no more free slots in *objects heap*, Ruby invokes GC to free *enough slots*, which is `max(allocated_slots * 0.2, GC_HEAP_FREE_SLOTS)` (see [020_heap_gc.rb](020_heap_gc.rb)).
+
