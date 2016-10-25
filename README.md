@@ -283,3 +283,155 @@ Tips:
 * Test DB queries count and try to reduce it (may use *assert_value* gem) (see [017_query_count.rb](017_query_count.rb))
 * Generate enough data for performance test
 
+## Think Outside the Box
+
+Ruby program may be optimized not only by optimizing its code. Application may use various dependencies, services and third party software.
+
+### Restart long-running processes
+
+Sometimes it is OK to restart long-running ruby processes.
+Memory consumption grows with time and GC slows down with more memory allocated.
+
+**!** In most cases ruby won't give objects heap memory back to OS.
+
+Applications cycling ways:
+
+1. Hosting platform tools (Heroku, etc.)
+2. Process management tools (monit, god, runit, systemd, etc.)
+3. OS limits (setrlimit)
+4. Cycle Unicorn workers
+
+### Use process forks & background jobs
+
+Objects-heavy calculations should be started in forks, so when forked process exits, heap memory will be returned to OS (see [018_heavy_forks.rb](018_heavy_forks.rb)).
+There are 3 common ways to return result from fork: files, DB, I/O pipe.
+
+**!** Doesn't work with threads, only forks (threads share ObjectSpace).
+
+For Rails use background jobs (*delayed_job*) and workers (*sidekiq*).
+**!** Sidekiq uses threads, so you should monitor and restart Sidekiq workers yourself.
+
+### Do OOBGC (Out-of-Band GC)
+
+*Not useful for Ruby 2.2+*.
+
+OOBGC - starting GC when application has low workload.  
+Unicorn has direct support of OOBGC via *unicorn/oob_gc* middleware.
+
+For Ruby 2.1+ you can use gem *gctool*. But be careful with threads: starting GC in one thread will affect all other threads of the process.
+
+### Tune your Database
+
+For PostgreSQL:
+
+* Let DB use maximum memory
+* DB should have enough space for sorts and aggregations
+* Log slow queries to reproduce problem
+
+PostgreSQL configuration best practives:
+
+~~~conf
+effective_cache_size <RAM * 3/4>
+shared_buffers <RAM * 1/4>
+# aggregations memory
+work_mem <2^(log(RAM / MAX_CONN)/log(2))>
+# vacuum & indices creation
+maintenance_work_mem <2^(log(RAM / 16)/log(2))>
+log_autovacuum_min_duration 1000ms
+log_min_duration_statement 1000ms
+auto_explain.log_min_duration 1000ms
+shared_preload_libraries 'auto_explain'
+custom_variable_classes 'auto_explain'
+auto_explain.log_analyze off
+~~~
+
+### Buy more resources
+
+Most important criteria:
+
+1. RAM
+2. I/O performance (disk)
+3. Database config
+4. Other
+
+## Tune Up the GC
+
+Ruby stores objects in its own heap (*objects heap*) and uses OS heap for data that doesn't fit into objects.
+
+Every object in Ruby is `RVALUE` struct. Its size:
+
+* 20 bytes for 32-bit OS (4-byte aligned)
+* 24 bytes for 32-bit OS (8-byte aligned)
+* 40 bytes for 64-bit OS
+
+Check `RVALUE` size with following commands:
+
+~~~
+gdb `rbenv which ruby`
+p sizeof(RVALUE)
+~~~
+
+**!** A medium-sized Rails App allocates ~ 0.5M objects at startup.
+
+Ruy heap space (*objects heap*) = N heap pages = M heap slots. Heap slot contains one object.  
+To allocate a new object, Ruby takes unused slot. If no unused slot found, interpreter allocates more heap pages.
+
+### Ruby 1.8
+
+Allocates 10_000 slots at startup (1 page) and then adds by 1 page (page = prev_page * 1.8)
+
+### Ruby 1.9 - 2.0
+
+Heap page = 16kB (~ 408 objects).  
+Allocates 10_000 slots (24 pages) and then adds by N 16kB pages (N = prev_pages * 1.8 - prev_pages).
+
+Some GC stats (`GC.stat`) for Ruby 1.9:
+
+* count - GC runs
+* heap_used - pages allocated (heap_used * 408 * 40b = memory allocated)
+* heap_increment - more pages to allocate before GC run
+* heap_length = heap_used + heap_increment
+* heap_live_num - live object in heap
+* heap_free_num - free slots in heap
+* heap_final_num - object to finalize by GC
+
+### Ruby 2.1
+
+GC_HEAP_GROWTH_FACTOR - growth factor (default = 1.8)  
+GC_HEAP_GROWTH_MAX_SLOTS - slots growth constraint
+
+Allocates 1 page + 24 pages and then adds by N pages (N = prev_nonempty_pages * GC_HEAP_GROWTH_FACTOR - prev_nonempty_pages).
+
+In Ruby 2.1 pages added on demand (heap_length != N of allocated pages, it's just counter).
+
+Some GC stats (`GC.stat`) for Ruby 2.1:
+
+* heap_free_num - free slots in allocated heap pages
+* heap_swept_slot - slots swept (freed) on last GC
+
+*Eden* - occupied heap pages.  
+*Tomb* - empty heap pages.
+
+To allocate a new object Ruby first looks for free space in *eden* and only then in *tomb*.
+
+**!** Ruby frees (gives it back to OS) objects heap memory by pages.
+
+Algorithm to determine number of pages to free:
+
+1. `sw`, - number of pages touched on sweep (number of objects / HEAP_OBJ_LIMIT)
+2. `rem = max(total_heap_pages * 0.8, init_slots)`, - pages that should stay
+3. `fr = total_heap_pages - rem`, - pages to free
+
+Usualy objects heap growth is 80% while reduction is 10%.
+
+### Ruby 2.2
+
+Some GC stats (`GC.stat`) for Ruby 2.2:
+
+* heap_allocated_pages = heap_used
+* heap_allocatable_pages = heap_increment
+* heap_sorted_pages = heap_length
+* heap_available_slots = heap_live_slots + heap_free_slots + heap_final_slots
+
+Growth is the same as in Ruby 2.1 but relative to *eden* pages, not allocated pages.
+
