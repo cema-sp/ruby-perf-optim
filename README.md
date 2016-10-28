@@ -2,7 +2,7 @@
 
 ## Try to disable GC and define memory consumption
 
-1. GC often makes Ruby slow (especialy <= v2.0 ). And that's because of high memory consumption
+1. GC often makes Ruby slow (especially <= v2.0 ). And that's because of high memory consumption
 2. Ruby has significant memory overhead
 3. GC in v2.1+ is 5 times faster!
 4. Raw performance of v1.9 - v2.3 is about the same
@@ -16,11 +16,11 @@ See [001_gc.rb](001_gc.rb)
 
 2. GC::Profiler has memory and CPU overhead (See [wrapper.rb](wrapper.rb) for custom wrapper example).
 
-3. Save memory by avoiding copiyng objects, modify them in place if it is possible (use ! methods).
+3. Save memory by avoiding copying objects, modify them in place if it is possible (use ! methods).
 
   See [004_string_bang.rb](004_string_bang.rb)
 
-4. If your String is less than 40 bytes - user `<<`, not `+=` method to concatenate it and Ruby will not allocate additional object.
+4. If your String is less than 40 bytes - user `<<`, not `+=` method to concatenate it and Ruby will not allocate an additional object.
 
   See [004_array_bang.rb](004_array_bang.rb) (w/ GC)
 
@@ -28,13 +28,13 @@ See [001_gc.rb](001_gc.rb)
 
   See [005_files.rb](005_files.rb) (w/ and w/o GC)
 
-6. Callbacks cause object to stay in memory. If you store callbacks, do not forget to remove them after they called.
+6. Callbacks cause an object to stay in memory. If you store callbacks, do not forget to remove them after they called.
   See [006_callbacks_1.rb](006_callbacks_1.rb)
   See [006_callbacks_2.rb](006_callbacks_2.rb)
   See [006_callbacks_3.rb](006_callbacks_3.rb)
   Try to avoid `&block` and use `yield` instead.
 
-7. Iterators use block arguments, so use them carefuly
+7. Iterators use block arguments, so use them carefully
 
   Issues:
   1. GC will not collect iterable before iterator is finished
@@ -42,7 +42,7 @@ See [001_gc.rb](001_gc.rb)
 
   Solutions:
 
-  1. Free objects from collection during iteration & use `each!` pattern
+  1. Free objects from the collection during iteration & use `each!` pattern
     See [007_iter_1.rb](007_iter_1.rb)
   2. Look at C code to find object allocations
     See [007_iter_2.rb](007_iter_2.rb) (for ruby < 2.3.0)
@@ -90,7 +90,7 @@ See [001_gc.rb](001_gc.rb)
 
 ## Optimize Rails
 
-1. ActiveRecord uses 3x DB data size memory and calls often calls GC
+1. ActiveRecord uses 3x DB data size memory and often calls GC
 
 2. Use `#pluck`, `#select` to load only necessary data
 
@@ -123,9 +123,9 @@ __ruby-prof__ gem has both API (for isolated profiling) and CLI (for startup pro
 See [010_rp_1.rb](010_rp_1.rb)
 
 Some programs may spend more time on startup than on actual code execution.
-Sometimes `GC.disable` may take significant amount of time because of _lazy GC sweep_.
+Sometimes `GC.disable` may take a significant amount of time because of _lazy GC sweep_.
 
-Use `Rack::RubyProf` middleware to profile Rails apps. Include it before `Rack::Runtime` to include other middlewares in report.
+Use `Rack::RubyProf` middleware to profile Rails apps. Include it before `Rack::Runtime` to include other middlewares in the report.
 To disable GC, use custom middleware [010_rp_rails/config/application.rb](010_rp_rails/config/application.rb).
 
 Rails profiling best practices:
@@ -176,12 +176,12 @@ You have 3 options for memory profiling:
 To detect if memory profiling needed you should use *monitoring* and *profiling* tools.  
 Good tool for profiling is **Valgrind Massif** but it shows memory allocations only for C/C++ code.
 
-Another tool is **Stackprof** that shows shows number of object allocations (that is proportional to memory consumption) (see [014_stackprof.rb](014_stackprof.rb)). But if your code allocates small number of large objects, it won't help.  
-Stackprof could generate flamegraphs and it's OK to use it in production, because it has no overhead.
+Another tool is **Stackprof** that shows number of object allocations (that is proportional to memory consumption) (see [014_stackprof.rb](014_stackprof.rb)). But if your code allocates a small number of large objects, it won't help.  
+Stackprof could generate flamegraphs and it's OK to use it in production because it has no overhead.
 
 ### Patched Ruby & RubyProf
 
-You need RailsExpress patched Ruby (google it). Then set RubyProf *measure mode* and use one of printers (see [015_rp_memory.rb](015_rp_memory.rb)). Don't forget to enable memory stats with `GC.enable_stats`.
+You need RailsExpress patched Ruby (google it). Then set RubyProf *measure mode* and use one the of printers (see [015_rp_memory.rb](015_rp_memory.rb)). Don't forget to enable memory stats with `GC.enable_stats`.
 
 Modes for memory profiling:
 
@@ -190,7 +190,7 @@ Modes for memory profiling:
 * GC_RUNS - # of GC runs (useless for optimization)
 * GC_TIME - GC time (useless for optimization)
 
-Memory profile shows only new memory allocations (not total number at time) and doesn't show GC reclaims.
+Memory profile shows only new memory allocations (not the total amount of memory at the time) and doesn't show GC reclaims.
 
 **!** Ruby allocates temp object for string > 23 chars.
 
@@ -210,19 +210,19 @@ memory_after = `ps -o rss= -p #{Process.pid}`.to_i / 1024
 
 ## Measure
 
-For adequate measurements we should measure a number of times and take median value.  
+For adequate measurements, we should measure a number of times and take median value.  
 A lot of external (CPU, OS, latency, etc.) and internal (GC runs, etc.) factors affect measured numbers. It is impossible to entirely exclude them.
 
 ### Minimize external factors
 
-* Disable dynamic CPU frequency (governor, cpupower in Linux)
+* Disable dynamic CPU frequency (`governor`, `cpupower` in Linux)
 * Warm up machine
 
 ### Minimize internal factors
 
 Two things can affect application: GC and System calls (including I/O calls).
 
-You may disable GC for measurements or force it before benchmark with `GC.start` (but not in a loop **!** because of new object being created in it).  
+You may disable GC for measurements or force it before benchmarking with `GC.start` (but not in a loop **!** because of a new object being created in it).  
 On Linux & Mac OS process fork available to fix that issue:
 
 ~~~ruby
@@ -240,7 +240,7 @@ end
 ### Analyze with Statistics
 
 *Confidence interval* - interval within which we can confidently state the true optimization lies.  
-*Level of confidence* - the size of confidence interval.
+*Level of confidence* - the size of the confidence interval.
 
 Analysis algorithm:
 
@@ -266,13 +266,13 @@ Analysis algorithm:
 
 Both lower and upper bounds of confidence interval should be > 0 (see [016_statistics.rb](016_statistics.rb)). Always make more than **30** measurements for good results.
 
-For Ruby, round measures to tenth of milliseconds (e.g. 1.23 s). For rounding use tie-breaking "round half to even" rule (round 5 to even number: 1.25 ~= 1.2, 1.35 ~= 1.4).
+For Ruby, round measures to the tenth of milliseconds (e.g. 1.23 s). For rounding use tie-breaking "round half to even" rule (round 5 to even number: 1.25 ~= 1.2, 1.35 ~= 1.4).
 
-For better results you may exclude outliers and first (cold) measure results.
+For better results, you may exclude outliers and first (cold) measure results.
 
 ### Test Rails performance
 
-For Rails performance testing use special gems (e.g. *rails-perftest*) or write your own custom assertions.
+For Rails performance testing, use special gems (e.g. *rails-perftest*) or write your own custom assertions.
 
 Tips:
 
@@ -285,7 +285,7 @@ Tips:
 
 ## Think Outside the Box
 
-Ruby program may be optimized not only by optimizing its code. Application may use various dependencies, services and third party software.
+Ruby program may be optimized not only by optimizing its code. Application may use various dependencies, services, and third party software.
 
 ### Restart long-running processes
 
@@ -315,8 +315,8 @@ For Rails use background jobs (*delayed_job*) and workers (*sidekiq*).
 
 *Not useful for Ruby 2.2+*.
 
-OOBGC - starting GC when application has low workload.  
-Unicorn has direct support of OOBGC via *unicorn/oob_gc* middleware.
+OOBGC - starting GC when an application has a low workload.  
+Unicorn has the direct support of OOBGC via *unicorn/oob_gc* middleware.
 
 For Ruby 2.1+ you can use gem *gctool*. But be careful with threads: starting GC in one thread will affect all other threads of the process.
 
@@ -374,7 +374,7 @@ p sizeof(RVALUE)
 **!** A medium-sized Rails App allocates ~ 0.5M objects at startup.
 
 Ruy heap space (*objects heap*) = N heap pages = M heap slots. Heap slot contains one object.  
-To allocate a new object, Ruby takes unused slot. If no unused slot found, interpreter allocates more heap pages.
+To allocate a new object, Ruby takes an unused slot. If no unused slot found, interpreter allocates more heap pages.
 
 ### Ruby 1.8
 
@@ -422,7 +422,7 @@ Algorithm to determine number of pages to free:
 2. `rem = max(total_heap_pages * 0.8, init_slots)`, - pages that should stay
 3. `fr = total_heap_pages - rem`, - pages to free
 
-Usualy objects heap growth is 80% while reduction is 10%.
+Usually objects heap growth is 80% while reduction is 10%.
 
 ### Ruby 2.2
 
@@ -442,7 +442,7 @@ If Ruby object is bigger than half of 40 bytes (on 64-bit OS) it will be stored 
 Ruby string (`RSTRING` struct) can store only 23 bytes of payload.  
 `ObjectSpace.memsize_of(obj)` - shown object size in memory in bytes.
 
-For example, 24 chars String will have size of 65 bytes (24 outside the heap + 1 for upkeep + 40 bytes inside heap).
+For example, 24 chars String will have a size of 65 bytes (24 outside the heap + 1 for upkeep + 40 bytes inside heap).
 
 It may be OK to allocate a big object in memory because it doesn't affect GC performance (but may lead to GC run), but it is crucial to allocate a large amount of small objects in *objects heap*.
 
