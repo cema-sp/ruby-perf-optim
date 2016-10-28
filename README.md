@@ -1,40 +1,49 @@
-# Ruby Performance Optimization Book Abstract
+# Ruby Performance Optimization
 
-## Try to disable GC and define memory consumption
+This is an abstract of [Ruby Performance Optimization](https://pragprog.com/book/adrpo/ruby-performance-optimization) book.
 
-1. GC often makes Ruby slow (especially <= v2.0 ). And that's because of high memory consumption
+## What makes Ruby so slow
+
+1. GC often makes Ruby slow (especially  Ruby <= 2.0). And that's because of high memory consumption & allocation
 2. Ruby has significant memory overhead
-3. GC in v2.1+ is 5 times faster!
+3. GC in Ruby v2.1+ is 5 times faster than in previuos versions
 4. Raw performance of v1.9 - v2.3 is about the same
 
 See [001_gc.rb](001_gc.rb)
 
-## Try to optimize memory
+## Optimize memory
+
+Use **GC::Profiler** to get some GC runs information.
 
 1. 80% of performance optimization comes from memory optimization
+
   See [002_memory.rb](002_memory.rb)
 
-2. GC::Profiler has memory and CPU overhead (See [wrapper.rb](wrapper.rb) for custom wrapper example).
+2. GC::Profiler has memory and CPU overhead
 
-3. Save memory by avoiding copying objects, modify them in place if it is possible (use ! methods).
+  See [wrapper.rb](wrapper.rb) for custom wrapper example.
+
+3. Save memory by avoiding copying objects, modify them in place if it is possible (use ! bang-methods)
 
   See [004_string_bang.rb](004_string_bang.rb)
 
-4. If your String is less than 40 bytes - user `<<`, not `+=` method to concatenate it and Ruby will not allocate an additional object.
+4. If your String is less than 40 bytes - use `<<` method instead of `+=` to concatenate it and Ruby will not allocate an additional object
 
   See [004_array_bang.rb](004_array_bang.rb) (w/ GC)
 
-5. Read files line by line. And keep in mind not only total memory consumption but also peaks.
+5. Read files line by line. And keep in mind not only total memory consumption but also peaks
 
   See [005_files.rb](005_files.rb) (w/ and w/o GC)
 
-6. Callbacks cause an object to stay in memory. If you store callbacks, do not forget to remove them after they called.
-  See [006_callbacks_1.rb](006_callbacks_1.rb)
-  See [006_callbacks_2.rb](006_callbacks_2.rb)
-  See [006_callbacks_3.rb](006_callbacks_3.rb)
-  Try to avoid `&block` and use `yield` instead.
+6. Callbacks (Procs & lambdas) cause its context (seized variables & object in which callback was created) to stay in memory until callback finalized. If you store callbacks, do not forget to remove them after they called.
 
-7. Iterators use block arguments, so use them carefully
+  See [006_callbacks_1.rb](006_callbacks_1.rb)  
+  See [006_callbacks_2.rb](006_callbacks_2.rb)  
+  See [006_callbacks_3.rb](006_callbacks_3.rb)  
+
+7. Try to avoid `&block` and use `yield` instead (former copies context stack while latter not)
+
+8. Iterators use block arguments, so use them carefully
 
   Issues:
   1. GC will not collect iterable before iterator is finished
@@ -456,4 +465,49 @@ Two main purposes are:
 ### Heap Usage
 
 If there are no more free slots in *objects heap*, Ruby invokes GC to free *enough slots*, which is `max(allocated_slots * 0.2, GC_HEAP_FREE_SLOTS)` (see [020_heap_gc.rb](020_heap_gc.rb)).
+
+### Malloc Limit
+
+GC will be triggered when you allocate more than the current memory limit (Ruby <= 2.0 `GC_MALLOC_LIMIT` ~= 8M bytes (7.63 Mb)) (see [021_malloc_gc.rb](021_malloc_gc.rb)).
+
+Malloc limit adjusted in runtime proportional to memory usage by an application, but not any good.
+
+Ruby 2.1 introduced **generational GC** - it divides all objects into *new* and *old* (survived a GC) generations with own limits `GC_MALLOC_LIMIT_MIN`, `GC_OLDMALLOC_LIMIT_MIN` (both 16 Mb initially).  
+They can grow up to `GC_MALLOC_LIMIT_MAX`, `GC_OLDMALLOC_LIMIT_MAX` (32 Mb and 128 Mb by default).  
+Growth factors are `GC_MALLOC_LIMIT_GROWTH_FACTOR` and `GC_OLDMALLOC_LIMIT_GROWTH_FACTOR` (1.4 and 1.2 by default). And reduction factor is 0.98.
+
+Ruby 2.2 introduced **incremental GC** - several mark steps followed by several sweeps (smaller "stop the world").
+
+Ruby uses *mark & sweep* GC and stops the world for *mark* steps.  
+Generational GC divides all GC invocations to *minor* (only for new objects) and *major* (for both new and old ones).
+
+Some related `GC.stat` params:
+
+* malloc_limit - malloc limit for the new generation
+* malloc_increase - memory allocated by the new generation since the last GC
+* oldmalloc_limit
+* oldmalloc_increase
+
+## GC Tuning
+
+### Ruby >= 2.1
+
+Tune up following env vars:
+
+* RUBY_GC_HEAP_INIT_SLOTS - initial slots number (default is 10_000)
+* RUBY_GC_HEAP_FREE_SLOTS - minimum number of slots to free (default is 4096)
+* RUBY_GC_HEAP_GROWTH_FACTOR - (default is 1.8)
+* RUBY_GC_HEAP_GROWTH_MAX_SLOTS - (default is 0 = unlimited)
+* RUBY_GC_HEAP_OLDOBJECT_LIMIT_FACTOR - affects *major* GC invokation time (default is 2)
+* RUBY_<parameters for malloc limits>
+
+### Ruby <= 2.0
+
+Tune up following env vars:
+
+* RUBY_HEAP_MIN_SLOTS - initial slots number
+* RUBY_FREE_MIN - minimum number of slots to free
+* RUBY_GC_MALLOC_LIMIT - change it to 16 Mb + (default is 8 Mb)
+
+To change other Ruby GC parameters for versions below 2.0, you have to recompile interpreter.
 
