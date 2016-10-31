@@ -45,15 +45,19 @@ Use **GC::Profiler** to get some GC runs information.
 
 8. Iterators use block arguments, so use them carefully
 
-  Issues:
-  1. GC will not collect iterable before iterator is finished
+  Note following:
+
+  1. GC will not collect iterable object (Array or Hash) before all iterations finished
   2. Iterators create temp objects
 
   Solutions:
 
   1. Free objects from the collection during iteration & use `each!` pattern
+
     See [007_iter_1.rb](007_iter_1.rb)
+
   2. Look at C code to find object allocations
+
     See [007_iter_2.rb](007_iter_2.rb) (for ruby < 2.3.0)
 
     Table of `T_NODE` allocations per iterator item for ruby 2.1:
@@ -87,36 +91,34 @@ Use **GC::Profiler** to get some GC runs information.
     | reverse_each     | 0    | 1     | 1     |  
     | select           | 0    | 1     | 0     |  
 
-8. Date parsing is slow
+
+9. Date parsing is slow, it is better to use defined date format and `strptime` method
+
   See [008_date_parsing.rb](008_date_parsing.rb)
 
-9. `Object#class`, `Object#is_a?`, `Object#kind_of?` are slow when used inside iterators
+10. `Object#class`, `Object#is_a?`, `Object#kind_of?` are slow when used inside iterators
 
-10. Use SQL for aggregation & calculation if it is possible
-  See [009_db](009_db) (database query itself is only 30ms)
+11. Use SQL for aggregation & calculation if it is possible
 
-11. Use native (compiled C) gems if possible
+  See [009_db/](009_db) (database query itself is only 30ms)
+
+12. Use native (compiled C) gems if possible
 
 ## Optimize Rails
 
 1. ActiveRecord uses 3x DB data size memory and often calls GC
-
 2. Use `#pluck`, `#select` to load only necessary data
-
 3. Preload associations if you plan to use them
-
 4. Use `#find_by_sql` to aggregate associations data
-
 5. Use `#find_each` & `#find_in_batches`
-
-6. Use `ActiveRecord::Base.connection.execute`, `ActiveRecord::Base.connection.exec_query`, `ActiveRecord::Base.connection.select_values`, `#update_all` to perform simple operations
-
+6. To perform simple operations use following methods:  
+  `ActiveRecord::Base.connection.execute`  
+  `ActiveRecord::Base.connection.exec_query`  
+  `ActiveRecord::Base.connection.select_values`  
+  `#update_all` 
 7. Use `render partial: 'a', collection: @col`, which loads partial template only once
-
 8. Paginate large views
-
 9. You may disable logging to increase performance
-
 10. Watch your helpers, they may be iterators-unsafe
 
 ## Profiling
@@ -127,15 +129,15 @@ __For CPU profiling disable GC!__
 
 ### ruby-prof
 
-__ruby-prof__ gem has both API (for isolated profiling) and CLI (for startup profiling). It also has Rack Middleware for Rails.
+__ruby-prof__ gem has both API (for isolated profiling) and CLI (for startup profiling) interfaces. It also has a Rack Middleware for Rails.
 
 See [010_rp_1.rb](010_rp_1.rb)
 
-Some programs may spend more time on startup than on actual code execution.
+Some programs may spend more time on startup than on actual code execution.  
 Sometimes `GC.disable` may take a significant amount of time because of _lazy GC sweep_.
 
-Use `Rack::RubyProf` middleware to profile Rails apps. Include it before `Rack::Runtime` to include other middlewares in the report.
-To disable GC, use custom middleware [010_rp_rails/config/application.rb](010_rp_rails/config/application.rb).
+Use `Rack::RubyProf` middleware to profile Rails apps. Include it before `Rack::Runtime` to include other middlewares in the report.  
+To disable GC, use custom middleware (see [010_rp_rails/config/application.rb](010_rp_rails/config/application.rb)).
 
 Rails profiling best practices:
 
@@ -153,7 +155,7 @@ The most useful report types for ruby-prof (see [011_rp_rep.rb](011_rp_rep.rb)):
 #### Callgrind format
 
 Ruby-prof can generate callgrind files with CallTreePrinter (see [011_rp_rep.rb](011_rp_rep.rb)).  
-Callgrind profiles have double counting ~~issue~~!.  
+Callgrind profiles have double counting ~~issue~~!  
 Callgrind profiles show loops as recursion.  
 It is better to start from the bottom of Call Graph and optimize its leaves first.
 
@@ -172,7 +174,7 @@ Optimization tips:
 
 ## Profile Memory
 
-80% of ruby performance optimization come from memory optimization.
+80% of Ruby performance optimization comes from memory optimization.
 
 You have 3 options for memory profiling:
 
@@ -182,7 +184,8 @@ You have 3 options for memory profiling:
 
 ### Specific tools
 
-To detect if memory profiling needed you should use *monitoring* and *profiling* tools.  
+To detect if memory profiling needed you should use *monitoring* and *profiling* tools.
+
 Good tool for profiling is **Valgrind Massif** but it shows memory allocations only for C/C++ code.
 
 Another tool is **Stackprof** that shows number of object allocations (that is proportional to memory consumption) (see [014_stackprof.rb](014_stackprof.rb)). But if your code allocates a small number of large objects, it won't help.  
@@ -219,8 +222,9 @@ memory_after = `ps -o rss= -p #{Process.pid}`.to_i / 1024
 
 ## Measure
 
-For adequate measurements, we should measure a number of times and take median value.  
-A lot of external (CPU, OS, latency, etc.) and internal (GC runs, etc.) factors affect measured numbers. It is impossible to entirely exclude them.
+For adequate measurements, we should make a number of measurements and take median value.  
+A lot of external (CPU, OS, latency, etc.) and internal (GC runs, etc.) factors affect measured numbers.
+It is impossible to entirely exclude them.
 
 ### Minimize external factors
 
@@ -232,7 +236,7 @@ A lot of external (CPU, OS, latency, etc.) and internal (GC runs, etc.) factors 
 Two things can affect application: GC and System calls (including I/O calls).
 
 You may disable GC for measurements or force it before benchmarking with `GC.start` (but not in a loop **!** because of a new object being created in it).  
-On Linux & Mac OS process fork available to fix that issue:
+On Linux & Mac OS process fork is able to fix that issue:
 
 ~~~ruby
 100.times do
@@ -318,11 +322,12 @@ There are 3 common ways to return result from fork: files, DB, I/O pipe.
 **!** Doesn't work with threads, only forks (threads share ObjectSpace).
 
 For Rails use background jobs (*delayed_job*) and workers (*sidekiq*).
+
 **!** Sidekiq uses threads, so you should monitor and restart Sidekiq workers yourself.
 
 ### Do OOBGC (Out-of-Band GC)
 
-*Not useful for Ruby 2.2+*.
+*Not useful since Ruby 2.2*.
 
 OOBGC - starting GC when an application has a low workload.  
 Unicorn has the direct support of OOBGC via *unicorn/oob_gc* middleware.
@@ -382,7 +387,7 @@ p sizeof(RVALUE)
 
 **!** A medium-sized Rails App allocates ~ 0.5M objects at startup.
 
-Ruy heap space (*objects heap*) = N heap pages = M heap slots. Heap slot contains one object.  
+Ruby heap space (*objects heap*) -> N heap pages -> M heap slots. Heap slot contains one object.  
 To allocate a new object, Ruby takes an unused slot. If no unused slot found, interpreter allocates more heap pages.
 
 ### Ruby 1.8
@@ -464,7 +469,7 @@ Two main purposes are:
 
 ### Heap Usage
 
-If there are no more free slots in *objects heap*, Ruby invokes GC to free *enough slots*, which is `max(allocated_slots * 0.2, GC_HEAP_FREE_SLOTS)` (see [020_heap_gc.rb](020_heap_gc.rb)).
+If there are no more free slots in *objects heap*, Ruby invoces GC to free *enough slots*, which is `max(allocated_slots * 0.2, GC_HEAP_FREE_SLOTS)` (see [020_heap_gc.rb](020_heap_gc.rb)).
 
 ### Malloc Limit
 
@@ -498,8 +503,8 @@ Tune up following env vars:
 * RUBY_GC_HEAP_FREE_SLOTS - minimum number of slots to free (default is 4096)
 * RUBY_GC_HEAP_GROWTH_FACTOR - (default is 1.8)
 * RUBY_GC_HEAP_GROWTH_MAX_SLOTS - (default is 0 = unlimited)
-* RUBY_GC_HEAP_OLDOBJECT_LIMIT_FACTOR - affects *major* GC invokation time (default is 2)
-* RUBY_<parameters for malloc limits>
+* RUBY_GC_HEAP_OLDOBJECT_LIMIT_FACTOR - affects *major* GC invocation time (default is 2)
+* RUBY_[parameters for malloc limits]
 
 ### Ruby <= 2.0
 
