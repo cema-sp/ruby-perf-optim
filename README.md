@@ -1,15 +1,18 @@
 # Ruby Performance Optimization
 
-This is an abstract of [Ruby Performance Optimization](https://pragprog.com/book/adrpo/ruby-performance-optimization) book.
+This notes are adapted from these sources:
+
+1. [Ruby Performance Optimization]
+2. [SpeedShop]
 
 ## What makes Ruby so slow
 
-1. GC often makes Ruby slow (especially  Ruby <= 2.0). And that's because of high memory consumption & allocation
+1. GC often makes Ruby slow (especially for Ruby `<= 2.0`). And that is because of high memory consumption & allocation
 2. Ruby has significant memory overhead
-3. GC in Ruby v2.1+ is 5 times faster than in previuos versions
-4. Raw performance of v1.9 - v2.3 is about the same
+3. GC in Ruby `>= 2.1` is 5 times faster than in previous versions
+4. Raw performance of Ruby `1.9 - 2.3` is about the same
 
-See [001_gc.rb](001_gc.rb)
+See [001_gc.rb](001_gc.rb).
 
 ## Optimize memory
 
@@ -58,7 +61,7 @@ Use **GC::Profiler** to get some GC runs information.
 
   2. Look at C code to find object allocations
 
-    See [007_iter_2.rb](007_iter_2.rb) (for ruby < 2.3.0)
+    See [007_iter_2.rb](007_iter_2.rb) (for Ruby `< 2.3.0`)
 
     Table of `T_NODE` allocations per iterator item for ruby 2.1:
 
@@ -102,9 +105,27 @@ Use **GC::Profiler** to get some GC runs information.
 
   See [009_db/](009_db) (database query itself is only 30ms)
 
-12. Use native (compiled C) gems if possible
+12. Use native (_compiled C_) gems if possible
 
 ## Optimize Rails
+
+### What is fast?
+
+For **App Server**:
+
+  * fast: `<50ms`
+  * ok:   `<300ms`
+  * slow: `>300ms`
+
+For **API**: 2 times faster!
+
+For **Frontend**:
+
+  * fast: `<500ms`
+  * ok:   `<2s`
+  * slow: `>2s`
+
+### Tips
 
 1. ActiveRecord uses 3x DB data size memory and often calls GC
 2. Use `#pluck`, `#select` to load only necessary data
@@ -120,6 +141,62 @@ Use **GC::Profiler** to get some GC runs information.
 8. Paginate large views
 9. You may disable logging to increase performance
 10. Watch your helpers, they may be iterators-unsafe
+
+### Caching
+
+Use Rails `cache(obj) {}` method to cache ActiveRecord objects expired by either:
+
+  - class
+  - id
+  - `updated_at`
+  - view
+
+Avoid 'Russian doll' (nested) cache blocks or cache 'id-arrays' like following:
+
+~~~erb
+<% cache(["list", items.maximum(:updated_at)]) do %>
+  <ul>
+    <% items.each do |item| %>
+      <% cache(item) do %>
+        ...
+      <% end %>
+    <% end %>
+  </ul>
+<% end %>
+~~~
+
+If you refer relations in views, do not forget to `touch` objects: `belongs_to :obj, touch: true`
+
+Main Rails cache stores:
+
+  - **ActiveSupport::FileStore** - shared between processes, and cheap, but has no LRU
+  - **ActiveSupport::MemoryStore** - fast, but expensive and could not be shared
+  - **Memcache / dalli** - shared and distributed, but expensive ,tough in config and
+    has record size limits
+  - **Redis** - shared & distributed, could persist and evict old records, but expensive 
+    and supports only strings
+  - **LRURedux** - very fast, but not shared, expensive and low-level
+
+### Heroku
+
+You should avoid falling into swap on Heroku, so calculate number of workers carefully 
+(128Mb for master and 256Mb for each worker).
+
+If you have `> 60 req/s`, use **unicorn** / **puma** / **passenger** (not **thin** / **webrick**).
+
+Try [derailed_benchmarks] to see memory consumption.
+
+Check out 24-hours memory consumption graphs.
+
+Worker killers may be useful if you have undefined memory leaks. Check that killer 
+perform not more frequently than once an hour.
+
+Serve assets from S3 / CDN or exclude them from monitoring.
+
+### Tools
+
+* [wrk]
+* [Apache Bench]
 
 ## Profiling
 
@@ -145,12 +222,15 @@ Rails profiling best practices:
 2. Always profile in _production_ mode
 3. Profile twice and discard cold-start results
 4. Profile w/ & w/o caching if you use it
+5. Profile with data of production DB size
 
 The most useful report types for ruby-prof (see [011_rp_rep.rb](011_rp_rep.rb)):
 
 1. __Flat__ (Shows which functions are slow)
 2. __Call graph__ (Shows callers and callees)
 3. __Stack report__ (Shows execution paths; good for small chunks of code)
+
+You also should try [rack-mini-profiler] with flamegraphs.
 
 #### Callgrind format
 
@@ -516,3 +596,9 @@ Tune up following env vars:
 
 To change other Ruby GC parameters for versions below 2.0, you have to recompile interpreter.
 
+[Ruby Performance Optimization]: https://pragprog.com/book/adrpo/ruby-performance-optimization "Ruby Performance Optimization"
+[SpeedShop]: https://www.speedshop.co/blog/ "SpeedShop"
+[rack-mini-profiler]: https://github.com/MiniProfiler/rack-mini-profiler "Rack mini profiler"
+[wrk]: https://github.com/wg/wrk "wrk"
+[Apache Bench]: https://httpd.apache.org/docs/2.4/programs/ab.html "Apache Bench"
+[derailed_benchmarks]: https://github.com/schneems/derailed_benchmarks "derailed_benchmarks"
