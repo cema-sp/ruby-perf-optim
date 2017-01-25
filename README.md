@@ -5,6 +5,57 @@ This notes are adapted from these sources:
 1. [Ruby Performance Optimization]
 2. [SpeedShop]
 
+## Table of content
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [What makes Ruby so slow](#what-makes-ruby-so-slow)
+- [Optimize memory](#optimize-memory)
+- [Optimize Rails](#optimize-rails)
+  - [What is fast?](#what-is-fast)
+  - [Tips](#tips)
+  - [Caching](#caching)
+  - [Heroku](#heroku)
+  - [Tools](#tools)
+- [Profiling](#profiling)
+  - [ruby-prof](#ruby-prof)
+    - [Callgrind format](#callgrind-format)
+- [Optimizing with Profiler](#optimizing-with-profiler)
+- [Profile Memory](#profile-memory)
+  - [Specific tools](#specific-tools)
+  - [Patched Ruby & RubyProf](#patched-ruby--rubyprof)
+  - [Manual way](#manual-way)
+- [Measure](#measure)
+  - [Minimize external factors](#minimize-external-factors)
+  - [Minimize internal factors](#minimize-internal-factors)
+  - [Analyze with Statistics](#analyze-with-statistics)
+  - [Use benchmark tools](#use-benchmark-tools)
+  - [Test Rails performance](#test-rails-performance)
+- [Think Outside the Box](#think-outside-the-box)
+  - [Restart long-running processes](#restart-long-running-processes)
+  - [Use process forks & background jobs](#use-process-forks--background-jobs)
+  - [Do OOBGC (Out-of-Band GC)](#do-oobgc-out-of-band-gc)
+  - [Tune your Database](#tune-your-database)
+  - [Buy more resources](#buy-more-resources)
+- [Tune Up the GC](#tune-up-the-gc)
+  - [Ruby 1.8](#ruby-18)
+  - [Ruby 1.9 - 2.0](#ruby-19---20)
+  - [Ruby 2.1](#ruby-21)
+  - [Ruby 2.2](#ruby-22)
+  - [Object Memory](#object-memory)
+- [What triggers GC](#what-triggers-gc)
+  - [Heap Usage](#heap-usage)
+  - [Malloc Limit](#malloc-limit)
+- [GC Tuning](#gc-tuning)
+  - [Ruby >= 2.1](#ruby--21)
+  - [Ruby <= 2.0](#ruby--20)
+- [Static Analysis Tools](#static-analysis-tools)
+- [Links](#links)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## What makes Ruby so slow
 
 1. GC often makes Ruby slow (especially for Ruby `<= 2.0`). And that is because of high memory consumption & allocation
@@ -608,7 +659,7 @@ To change other Ruby GC parameters for versions below 2.0, you have to recompile
 
 ## Links
 
-* [Fast Ruby] - collection of useful tips & tricks
+* [Fast Ruby] - awesome collection of useful tips & tricks
 
 [Ruby Performance Optimization]: https://pragprog.com/book/adrpo/ruby-performance-optimization "Ruby Performance Optimization"
 [SpeedShop]: https://www.speedshop.co/blog/ "SpeedShop"
