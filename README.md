@@ -133,10 +133,12 @@ For **Frontend**:
 4. Use `#find_by_sql` to aggregate associations data
 5. Use `#find_each` & `#find_in_batches`
 6. To perform simple operations use following methods:  
-  `ActiveRecord::Base.connection.execute`  
-  `ActiveRecord::Base.connection.exec_query`  
-  `ActiveRecord::Base.connection.select_values`  
-  `#update_all` 
+
+  * `ActiveRecord::Base.connection.execute`  
+  * `ActiveRecord::Base.connection.exec_query`  
+  * `ActiveRecord::Base.connection.select_values`  
+  * `#update_all` 
+
 7. Use `render partial: 'a', collection: @col`, which loads partial template only once
 8. Paginate large views
 9. You may disable logging to increase performance
@@ -362,6 +364,10 @@ Both lower and upper bounds of confidence interval should be > 0 (see [016_stati
 For Ruby, round measures to the tenth of milliseconds (e.g. 1.23 s). For rounding use tie-breaking "round half to even" rule (round 5 to even number: 1.25 ~= 1.2, 1.35 ~= 1.4).
 
 For better results, you may exclude outliers and first (cold) measure results.
+
+### Use benchmark tools
+
+* [benchmark/ips] - measures Ruby code iteration per second
 
 ### Test Rails performance
 
@@ -596,9 +602,20 @@ Tune up following env vars:
 
 To change other Ruby GC parameters for versions below 2.0, you have to recompile interpreter.
 
+## Static Analysis Tools
+
+* [fasterer] - gives performance suggestions
+
+## Links
+
+* [Fast Ruby] - collection of useful tips & tricks
+
 [Ruby Performance Optimization]: https://pragprog.com/book/adrpo/ruby-performance-optimization "Ruby Performance Optimization"
 [SpeedShop]: https://www.speedshop.co/blog/ "SpeedShop"
 [rack-mini-profiler]: https://github.com/MiniProfiler/rack-mini-profiler "Rack mini profiler"
 [wrk]: https://github.com/wg/wrk "wrk"
 [Apache Bench]: https://httpd.apache.org/docs/2.4/programs/ab.html "Apache Bench"
 [derailed_benchmarks]: https://github.com/schneems/derailed_benchmarks "derailed_benchmarks"
+[fasterer]: https://github.com/DamirSvrtan/fasterer "fasterer"
+[benchmark/ips]: https://github.com/evanphx/benchmark-ips "benchmark/ips"
+[Fast Ruby]: https://github.com/JuanitoFatas/fast-ruby "Fast Ruby"
